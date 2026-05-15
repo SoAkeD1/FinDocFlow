@@ -6,21 +6,56 @@ from PIL import Image
 import validators
 
 def classify_document_type(text):
+    """
+    Return the category with the highest keyword‑match score.
+    Possible categories:
+      'KYC Document', 'Loan Application', 'Bank Statement',
+      'Income Certificate', 'Presentation/Other', 'Unknown Document'
+    """
     text_lower = text.lower()
-    if any(kw in text_lower for kw in ['loan application', 'loan form', 'personal loan', 'loan amount', 'loan no', 'loan account', 'loan']):
-        return 'loan_form'
-    if any(kw in text_lower for kw in ['aadhaar', 'voter id', 'driving licence', 'kyc', 'identity', 'address proof']):
-        return 'kyc'
-    if any(kw in text_lower for kw in ['bank statement', 'transaction', 'account number', 'statement', 'balance']):
-        return 'bank_statement'
-    if any(kw in text_lower for kw in ['salary', 'income certificate', 'income', 'pay', 'employer', 'gross salary']):
-        return 'income_certificate'
-    return 'unknown'
+
+    # Define keywords for each category
+    categories = {
+        "KYC Document": {
+            "kyc", "know your customer", "aadhaar", "aadhar",
+            "identity", "voter", "passport"
+        },
+        "Loan Application": {
+            "loan application", "loan amount", "loan purpose",
+            "emi", "repayment", "tenure", "disbursement"
+        },
+        "Bank Statement": {
+            "account statement", "transaction", "debit", "credit",
+            "balance", "opening balance", "closing balance", "bank statement"
+        },
+        "Income Certificate": {
+            "income", "salary", "form 16", "itr", "tax return", "employer"
+        },
+        "Presentation/Other": {
+            "presentation", "slide", "agenda", "objective",
+            "conclusion", "thank you"
+        },
+    }
+
+    scores = {}
+    for cat, keywords in categories.items():
+        total = 0
+        for kw in keywords:
+            total += text_lower.count(kw)
+        scores[cat] = total
+
+    # Pick the category with the highest score
+    best_cat = max(scores, key=scores.get)
+    if scores[best_cat] == 0:
+        return "Unknown Document"
+    return best_cat
+
 
 def extract_pan(text):
     pattern = r'[A-Z]{5}\d{4}[A-Z]'
     match = re.search(pattern, text)
     return match.group(0) if match else None
+
 
 def extract_name(text):
     lines = text.split('\n')
@@ -31,10 +66,12 @@ def extract_name(text):
                 return parts[1].strip()
     return None
 
+
 def extract_date(text):
     pattern = r'\b(\d{2}[-/]\d{2}[-/]\d{4})\b'
     match = re.search(pattern, text)
     return match.group(1) if match else None
+
 
 def extract_loan_amount(text):
     lines = text.split('\n')
@@ -48,10 +85,12 @@ def extract_loan_amount(text):
         return nums[0].replace(',', '')
     return None
 
+
 def extract_account_number(text):
     pattern = r'\b(\d{9,18})\b'
     matches = re.findall(pattern, text)
     return matches[0] if matches else None
+
 
 def extract_income(text):
     lines = text.split('\n')
@@ -62,6 +101,7 @@ def extract_income(text):
                 return nums[0].replace(',', '')
     return None
 
+
 def extract_address(text):
     """Simple address extraction by looking for a line containing 'address' and a colon."""
     lines = text.split('\n')
@@ -71,6 +111,7 @@ def extract_address(text):
             if len(parts) > 1 and parts[1].strip():
                 return parts[1].strip()
     return None
+
 
 def process_document_bytes(file_bytes, filename=''):
     import time as _time
@@ -111,58 +152,4 @@ def process_document_bytes(file_bytes, filename=''):
     date = extract_date(full_text)
     loan_amount = extract_loan_amount(full_text)
     account_number = extract_account_number(full_text)
-    income = extract_income(full_text)
-    address = extract_address(full_text)
-
-    # Confidence per field (hard-coded nominal values when a field is extracted)
-    def _confidence(val, default=0.90):
-        return default if val else 0.0
-
-    confidence_per_field = {
-        "name": _confidence(name, 0.90),
-        "pan": _confidence(pan, 0.95),
-        "date": _confidence(date, 0.95),
-        "loan_amount": _confidence(loan_amount, 0.90),
-        "account_number": _confidence(account_number, 0.95),
-        "income": _confidence(income, 0.90),
-        "address": _confidence(address, 0.80),
-    }
-
-    # Overall confidence (average of all fields, scaled to percentage)
-    values = list(confidence_per_field.values())
-    overall_confidence = (sum(values) / len(values)) * 100
-    overall_confidence = round(overall_confidence, 1)
-
-    # Determine processing status based on overall confidence
-    if overall_confidence >= 90:
-        status = "Auto-Approved"
-    elif overall_confidence >= 75:
-        status = "Review"
-    else:
-        status = "Manual"
-
-    processing_time = round(_time.time() - start_time, 2)
-
-    extracted_fields = {
-        "name": name,
-        "pan": pan,
-        "date": date,
-        "loan_amount": loan_amount,
-        "account_number": account_number,
-        "income": income,
-        "address": address,
-    }
-
-    issues = []  # Populate later if any field‑level problems are detected
-
-    result = {
-        "filename": filename,
-        "doc_type": doc_type,
-        "overall_confidence": overall_confidence,
-        "processing_time_sec": processing_time,
-        "status": status,
-        "extracted_fields": extracted_fields,
-        "confidence_per_field": confidence_per_field,
-        "issues": issues,
-    }
-    return result
+    income
