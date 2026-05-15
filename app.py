@@ -4,6 +4,7 @@ import time
 import random
 import re
 import io
+import json
 import pytesseract
 from PIL import Image
 import logging
@@ -156,4 +157,182 @@ def upload_page():
         ]
 
         # Convert to DataFrame for display
-        df_ext
+        df_ext = pd.DataFrame(extracted_items, columns=["Field", "Value"])
+        st.dataframe(df_ext, use_container_width=True)
+
+        st.info(f"**Decision:** {decision}   |   **Confidence:** {confidence}%")
+
+
+# ---------- Page: Dashboard ----------
+def dashboard_page():
+    st.subheader("📊 Dashboard")
+
+    rows = get_all_documents()  # list of sqlite3.Row
+
+    if not rows:
+        st.warning("No documents have been processed yet. Go to **Upload & Process** to add data.")
+        return
+
+    df = pd.DataFrame(rows, columns=rows[0].keys())
+
+    # --- Metric cards ---
+    total_docs = len(df)
+    avg_conf = df["confidence_score"].mean()
+    approved = int(df["status"].str.contains("Approved", case=False).sum())
+    latest_name = df.iloc[0]["filename"] if total_docs > 0 else "N/A"
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Total Documents", total_docs)
+    col2.metric("Avg Confidence", f"{avg_conf:.1f}%")
+    col3.metric("Auto‑Approved", approved)
+    col4.metric("Latest Upload", latest_name)
+
+    st.markdown("---")
+
+    # --- Charts ---
+    left, right = st.columns(2)
+
+    with left:
+        st.markdown("#### Documents by Type")
+        type_counts = df["doc_type"].value_counts().reset_index()
+        type_counts.columns = ["doc_type", "count"]
+        fig_bar = px.bar(
+            type_counts,
+            x="doc_type",
+            y="count",
+            color="doc_type",
+            labels={"doc_type": "Document Type", "count": "Count"},
+            template="plotly_white",
+        )
+        st.plotly_chart(fig_bar, use_container_width=True)
+
+    with right:
+        st.markdown("#### Documents by Status")
+        status_counts = df["status"].value_counts().reset_index()
+        status_counts.columns = ["status", "count"]
+        fig_pie = px.pie(
+            status_counts,
+            names="status",
+            values="count",
+            color="status",
+            hole=0.4,
+            template="plotly_white",
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
+
+    st.markdown("---")
+
+    # --- Recent documents table ---
+    st.markdown("#### Last 10 Documents")
+    last10 = df.head(10)
+    st.dataframe(last10, use_container_width=True)
+
+
+# ---------- Page: Audit Log ----------
+def audit_page():
+    st.subheader("📋 Audit Log")
+
+    rows = get_all_documents()
+
+    if not rows:
+        st.info("No audit records yet. Process documents to populate the log.")
+        return
+
+    # Convert to DataFrame
+    df = pd.DataFrame(rows, columns=rows[0].keys())
+
+    # --- Search bar ---
+    search_term = st.text_input("🔍 Search by filename or document type")
+    if search_term:
+        mask = (
+            df["filename"].str.contains(search_term, case=False, na=False)
+            | df["doc_type"].str.contains(search_term, case=False, na=False)
+        )
+        df = df[mask]
+
+    st.markdown(f"**{len(df)} record(s) found**")
+
+    # --- Full history table ---
+    st.dataframe(df, use_container_width=True)
+
+    # --- CSV download ---
+    csv = df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "📥 Download CSV",
+        data=csv,
+        file_name="audit_log.csv",
+        mime="text/csv",
+    )
+
+    st.markdown("---")
+
+    # --- Compare two documents side by side ---
+    st.markdown("#### Compare Two Documents")
+
+    doc_ids = [r["id"] for r in rows if r["id"]]
+    doc_labels = {r["id"]: f"{r['id']} – {r['filename']}" for r in rows if r["id"]}
+
+    if len(doc_ids) < 2:
+        st.info("Need at least two documents to compare.")
+        return
+
+    col_a, col_b = st.columns(2)
+
+    with col_a:
+        sel_a = st.selectbox("Select Document A", doc_ids, format_func=lambda x: doc_labels.get(x, str(x)))
+    with col_b:
+        sel_b = st.selectbox("Select Document B", doc_ids, format_func=lambda x: doc_labels.get(x, str(x)))
+
+    if sel_a and sel_b:
+        doc_a = get_document_by_id(sel_a)
+        doc_b = get_document_by_id(sel_b)
+
+        if doc_a and doc_b:
+            a_extracted = json.loads(doc_a["extracted_json"]) if doc_a["extracted_json"] else {}
+            b_extracted = json.loads(doc_b["extracted_json"]) if doc_b["extracted_json"] else {}
+
+            # Compare fields
+            field_keys = sorted(set(list(a_extracted.get("fields", {}).keys()) + list(b_extracted.get("fields", {}).keys())))
+
+            comp_data = []
+            for key in field_keys:
+                a_val = a_extracted.get("fields", {}).get(key, "")
+                b_val = b_extracted.get("fields", {}).get(key, "")
+                comp_data.append({"Field": key, f"Doc {sel_a}": a_val, f"Doc {sel_b}": b_val})
+
+            comp_df = pd.DataFrame(comp_data)
+            st.dataframe(comp_df, use_container_width=True)
+        else:
+            st.error("Could not load the selected documents.")
+    else:
+        st.info("Select both documents to compare.")
+
+
+# ---------- Sidebar Navigation ----------
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
+
+with st.sidebar:
+    st.markdown("# 📄 FinDocFlow")
+    st.markdown("**Sundaram Finance**")
+    st.divider()
+    if st.button("🏠 Home", use_container_width=True):
+        st.session_state.page = "Home"
+    if st.button("📤 Upload & Process", use_container_width=True):
+        st.session_state.page = "Upload"
+    if st.button("📊 Dashboard", use_container_width=True):
+        st.session_state.page = "Dashboard"
+    if st.button("📋 Audit Log", use_container_width=True):
+        st.session_state.page = "Audit"
+
+# ---------- Page Routing ----------
+if st.session_state.page == "Home":
+    home_page()
+elif st.session_state.page == "Upload":
+    upload_page()
+elif st.session_state.page == "Dashboard":
+    dashboard_page()
+elif st.session_state.page == "Audit":
+    audit_page()
+else:
+    home_page()
