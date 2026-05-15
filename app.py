@@ -125,4 +125,34 @@ if uploaded_file is not None:
         ("PAN", fields.get("pan")),
         ("Date (Detected)", fields.get("date")),
         ("Loan Amount", fields.get("loan_amount")),
-        ("Account Number", fields.get("account
+        ("Account Number", fields.get("account_number")),
+        ("Income", fields.get("income")),
+    ]
+
+    # Convert to DataFrame for display
+    df_extracted = pd.DataFrame(extracted_items, columns=["Field", "Value"]).dropna(subset=["Value"])
+
+    if not df_extracted.empty:
+        st.markdown("### Extracted Fields")
+        st.dataframe(df_extracted, use_container_width=True)
+    else:
+        st.warning("No fields could be extracted. Please check the document quality.")
+
+    # Decision display (random)
+    st.markdown("### Decision")
+    status_color = {
+        "Approved": "#22c55e",
+        "Review Required": "#f59e0b",
+        "Rejected": "#ef4444",
+    }.get(decision, "#6b7280")
+
+    st.markdown(
+        f"<div style='background:{status_color}; padding:12px; border-radius:8px;'>"
+        f"<span style='color:white; font-weight:bold;'>Decision: {decision}</span></div>",
+        unsafe_allow_html=True,
+    )
+
+    # Confidence
+    st.markdown("<p style='color:#94a3b8; margin-top:24px;'>Confidence Score</p>", unsafe_allow_html=True)
+    st.progress(int(confidence))
+    st.caption(f"{confidence}% confidence")
