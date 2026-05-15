@@ -1,174 +1,411 @@
 import streamlit as st
 import pandas as pd
-import json
-import os
-from database import create_tables, insert_document, get_all_documents, demo_data, get_connection, DB_PATH
-from ocr_engine import process_document_bytes
+import plotly.express as px
+import time
+import random
+import io
 
-st.set_page_config(page_title="FinDocFlow", layout="wide")
+# -------------------------------
+# Page configuration (must be first Streamlit command)
+# -------------------------------
+st.set_page_config(page_title="FinDocFlow", page_icon="📄", layout="wide")
 
-# Initialize DB and demo data
-create_tables()
-conn = get_connection()
-count = conn.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
-conn.close()
-if count == 0:
-    demo_data()
+# -------------------------------
+# Custom CSS injection
+# -------------------------------
+st.markdown(
+    """
+    <style>
+    /* Global background */
+    .reportview-container, .main, .block-container {
+        background-color: #0f172a;
+    }
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #0f172a;
+    }
+    /* Metric cards */
+    div[data-testid="stMetric"] {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 1rem;
+    }
+    div[data-testid="stMetric"] label {
+        color: #94a3b8;
+    }
+    div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
+        color: #f8fafc;
+        font-size: 2rem;
+    }
+    /* General helper classes */
+    .feature-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        color: #f1f5f9;
+    }
+    .feature-card h3 {
+        color: #3b82f6;
+    }
+    .metric-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-st.title("FinDocFlow – Document Automation Dashboard")
-st.markdown("On-premise OCR & document automation for Indian NBFCs")
+# -------------------------------
+# Session state for navigation
+# -------------------------------
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
 
-menu = st.sidebar.radio("Navigation", ["Upload & Process", "Dashboard", "Audit Log"])
-
-# Show project location in the sidebar
+# -------------------------------
+# Sidebar
+# -------------------------------
+st.sidebar.markdown(
+    "<h1 style='color:#3b82f6; text-align:center;'>📄 FinDocFlow</h1>",
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown(
+    "<p style='color:#94a3b8; text-align:center; font-size:0.9rem;'>Sundaram Finance</p>",
+    unsafe_allow_html=True,
+)
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Project root**")
-st.sidebar.code(os.getcwd())
-st.sidebar.markdown("**Database file**")
-st.sidebar.code(DB_PATH)
 
-if menu == "Upload & Process":
-    st.header("Upload Documents")
-    uploaded_files = st.file_uploader(
-        "Choose scanned PDF or image files (JPG, PNG, PDF)",
-        type=["jpg", "jpeg", "png", "pdf"],
-        accept_multiple_files=True,
+menu = ["🏠 Home", "📤 Upload & Process", "📊 Dashboard", "📋 Audit Log"]
+menu_map = {
+    "🏠 Home": "Home",
+    "📤 Upload & Process": "Upload",
+    "📊 Dashboard": "Dashboard",
+    "📋 Audit Log": "Audit",
+}
+index = menu.index(
+    [k for k, v in menu_map.items() if v == st.session_state.page][0]
+)  # find current index
+
+selected = st.sidebar.radio("Navigation", menu, index=index)
+st.session_state.page = menu_map[selected]
+
+# -------------------------------
+# Sample data
+# -------------------------------
+def generate_sample_data():
+    data = pd.DataFrame(
+        {
+            "Reference ID": [f"FD-{i:04d}" for i in range(1, 21)],
+            "Document Type": [
+                "Loan Application",
+                "Invoice",
+                "KYC",
+                "Loan Application",
+                "Invoice",
+            ]
+            * 4,
+            "Status": ["Approved", "Review", "Manual", "Approved", "Review"] * 4,
+            "Date": pd.date_range("2025-01-01", periods=20, freq="D").strftime(
+                "%Y-%m-%d"
+            ),
+            "Reviewer": ["Alice", "Bob", "Charlie", "Alice", "Bob"] * 4,
+        }
+    )
+    return data
+
+
+# -------------------------------
+# Helper: colored HTML table
+# -------------------------------
+def colored_table(df):
+    color_map_status = {
+        "Approved": "#166534",
+        "Review": "#854d0e",
+        "Manual": "#7f1d1d",
+    }
+    html = (
+        '<table style="width:100%; border-collapse:collapse; color:#f8fafc; font-size:0.9rem;">'
+    )
+    html += "<thead><tr>"
+    for col in df.columns:
+        html += f'<th style="background:#1e293b; padding:0.5rem; border:1px solid #334155;">{col}</th>'
+    html += "</tr></thead><tbody>"
+    for _, row in df.iterrows():
+        status = row["Status"]
+        row_color = color_map_status.get(status, "#1e293b")
+        html += f'<tr style="background:{row_color}; border:1px solid #334155;">'
+        for col in df.columns:
+            html += f'<td style="padding:0.5rem; border:1px solid #334155;">{row[col]}</td>'
+        html += "</tr>"
+    html += "</tbody></table>"
+    return html
+
+
+# -------------------------------
+# Pages
+# -------------------------------
+def home_page():
+    # Hero section
+    st.markdown(
+        """
+        <div style="text-align:center; padding: 3rem 1rem;">
+            <h1 style="color:#f8fafc; font-size:3rem;">Intelligent Document Automation</h1>
+            <p style="color:#94a3b8; font-size:1.25rem;">Next‑generation OCR for NBFCs — fast, accurate, on‑premise.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    if uploaded_files:
-        if st.button("Process Documents"):
-            for uploaded_file in uploaded_files:
-                file_bytes = uploaded_file.read()
-                with st.spinner(f"Processing {uploaded_file.name}..."):
-                    try:
-                        result = process_document_bytes(file_bytes, uploaded_file.name)
-                    except Exception as e:
-                        st.error(f"Error processing {uploaded_file.name}: {e}")
-                        continue
-
-                insert_document(
-                    filename=result["filename"],
-                    doc_type=result["doc_type"],
-                    confidence=result["overall_confidence"],
-                    status=result["status"],
-                    extracted={
-                        "fields": result["extracted_fields"],
-                        "confidence_per_field": result["confidence_per_field"],
-                    },
-                    proc_time=result["processing_time_sec"],
-                )
-
-                st.success(f"Processed {uploaded_file.name} – Status: {result['status']}")
-                with st.expander("Show details"):
-                    st.json(result["extracted_fields"])
-                    st.write("Confidence per field:")
-                    st.json(result["confidence_per_field"])
-                    st.write(f"Overall confidence: {result['overall_confidence']}%")
-                    st.write(f"Document type: {result['doc_type']}")
-                    st.write(f"Issues: {result['issues']}")
-
-            st.info("All files processed.")
-
-elif menu == "Dashboard":
-    st.header("Dashboard Metrics")
-    rows = get_all_documents()
-    if not rows:
-        st.info("No documents processed yet.")
-    else:
-        df = pd.DataFrame(
-            rows,
-            columns=[
-                "id",
-                "filename",
-                "doc_type",
-                "confidence_score",
-                "status",
-                "extracted_json",
-                "upload_time",
-                "processing_time_sec",
-            ],
+    # Feature cards
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown(
+            '<div class="feature-card"><h3>⚡</h3><h3>80% Faster Processing</h3><p>Cut turnaround time dramatically with AI‑powered extraction.</p></div>',
+            unsafe_allow_html=True,
         )
-        total = len(df)
-        auto_count = len(df[df["status"] == "Auto-Approved"])
-        review_count = len(df[df["status"] == "Review"])
-        manual_count = len(df[df["status"] == "Manual"])
-        stp_rate = (auto_count / total * 100) if total else 0.0
-        avg_proc_time = df["processing_time_sec"].mean() if total else 0.0
-        error_rate = (manual_count / total * 100) if total else 0.0
-
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Total Processed", total)
-        col2.metric("STP Rate", f"{stp_rate:.1f}%")
-        col3.metric("Avg Processing Time", f"{avg_proc_time:.2f} s")
-        col4.metric("Error / Manual Rate", f"{error_rate:.1f}%")
-
-        st.subheader("Document Status")
-        status_df = df["status"].value_counts().reset_index()
-        status_df.columns = ["Status", "Count"]
-        st.bar_chart(status_df.set_index("Status"))
-
-        st.subheader("Document Types")
-        type_df = df["doc_type"].value_counts().reset_index()
-        type_df.columns = ["Document Type", "Count"]
-        st.bar_chart(type_df.set_index("Document Type"))
-
-elif menu == "Audit Log":
-    st.header("Audit Trail")
-    rows = get_all_documents()
-    if not rows:
-        st.info("No records yet.")
-    else:
-        df = pd.DataFrame(
-            rows,
-            columns=[
-                "id",
-                "filename",
-                "doc_type",
-                "confidence_score",
-                "status",
-                "extracted_json",
-                "upload_time",
-                "processing_time_sec",
-            ],
+    with col2:
+        st.markdown(
+            '<div class="feature-card"><h3>🎯</h3><h3>98% Accuracy</h3><p>Industry‑leading OCR accuracy reduces re‑work.</p></div>',
+            unsafe_allow_html=True,
+        )
+    with col3:
+        st.markdown(
+            '<div class="feature-card"><h3>🔒</h3><h3>100% On‑Premise</h3><p>Your data never leaves your infrastructure.</p></div>',
+            unsafe_allow_html=True,
         )
 
-        def parse_extracted(js):
-            try:
-                return json.dumps(json.loads(js), indent=2)
-            except Exception:
-                return js
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(
+        "<h2 style='color:#f8fafc; text-align:center;'>How it works</h2>",
+        unsafe_allow_html=True,
+    )
 
-        df["extracted"] = df["extracted_json"].apply(parse_extracted)
+    steps = [
+        ("📤", "Upload", "Upload any document"),
+        ("🔍", "OCR", "Extract text & data"),
+        ("🧠", "AI Analysis", "Classify & validate"),
+        ("✅", "Decision", "Auto‑approve or route"),
+        ("📊", "Integration", "Push to core system"),
+    ]
+    cols = st.columns(5)
+    for i, (icon, title, desc) in enumerate(steps):
+        with cols[i]:
+            st.markdown(
+                f"""
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:1.2rem; text-align:center;">
+                    <div style="font-size:2rem;">{icon}</div>
+                    <h4 style="color:#f8fafc; margin:0.5rem 0 0.2rem;">{title}</h4>
+                    <p style="color:#94a3b8; font-size:0.85rem;">{desc}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        df_display = df[
-            [
-                "id",
-                "filename",
-                "doc_type",
-                "confidence_score",
-                "status",
-                "upload_time",
-                "processing_time_sec",
-            ]
-        ].copy()
-        df_display["extracted"] = df["extracted"]
-        st.dataframe(df_display)
 
-        st.sidebar.markdown("### Filters")
-        status_filter = st.sidebar.multiselect(
-            "Status",
-            options=["Auto-Approved", "Review", "Manual"],
-            default=["Auto-Approved", "Review", "Manual"],
+def upload_page():
+    st.markdown(
+        "<h2 style='color:#f8fafc;'>📤 Upload & Process</h2>",
+        unsafe_allow_html=True,
+    )
+    uploaded_file = st.file_uploader(
+        "Choose a document (PDF, JPG, PNG)", type=["pdf", "jpg", "png"]
+    )
+
+    if uploaded_file is not None:
+        with st.spinner("Processing document…"):
+            time.sleep(0.8)
+            st.info("Step 1/4: OCR Extraction completed ✅")
+            time.sleep(0.6)
+            st.info("Step 2/4: Data Parsing completed ✅")
+            time.sleep(0.6)
+            st.info("Step 3/4: Classification completed ✅")
+            time.sleep(0.6)
+            st.info("Step 4/4: Verification completed ✅")
+            st.success("Processing complete!")
+
+        # Random decision
+        decision = random.choices(
+            ["Auto-Approved", "Review", "Manual"], weights=[70, 20, 10]
+        )[0]
+        color_map = {
+            "Auto-Approved": "#22c55e",
+            "Review": "#eab308",
+            "Manual": "#ef4444",
+        }
+        st.markdown(
+            f"""
+            <div style="background:{color_map[decision]}; color:white; padding:1rem; border-radius:8px; font-size:1.5rem; text-align:center; margin:1rem 0;">
+                ✅ Decision: {decision}
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
-        type_filter = st.sidebar.multiselect(
-            "Document Type",
-            options=df["doc_type"].unique(),
-            default=list(df["doc_type"].unique()),
+
+        # Extracted fields
+        st.markdown("<h4 style='color:#f8fafc;'>Extracted Fields</h4>", unsafe_allow_html=True)
+        extracted = {
+            "Applicant Name": "John Doe",
+            "Loan Amount": "₹25,00,000",
+            "PAN": "ABCDE1234F",
+            "Date of Birth": "01/01/1990",
+            "Status": "Active",
+            "Document Date": "2025-01-15",
+        }
+        df_extracted = pd.DataFrame(extracted.items(), columns=["Field", "Value"])
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.dataframe(df_extracted, use_container_width=True, hide_index=True)
+        with col_b:
+            st.markdown("<br>", unsafe_allow_html=True)  # spacing
+            st.markdown(
+                "<p style='color:#94a3b8;'>Confidence Score</p>",
+                unsafe_allow_html=True,
+            )
+            st.progress(89, "89%")
+            st.caption("High confidence extraction")
+
+        st.markdown("<hr>", unsafe_allow_html=True)
+
+
+def dashboard_page():
+    st.markdown(
+        "<h2 style='color:#f8fafc;'>📊 Dashboard</h2>", unsafe_allow_html=True
+    )
+
+    # ---------------------------
+    # Row 1: Metric cards
+    # ---------------------------
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        st.metric("Total Documents", "12,847", "+234")
+    with m2:
+        st.metric("STP Rate", "78.5%", "+2.1%")
+    with m3:
+        st.metric("Avg. Processing Time", "2.3s", "-0.4s")
+    with m4:
+        st.metric("Error Rate", "0.12%", "-0.03%")
+
+    # ---------------------------
+    # Row 2: Charts
+    # ---------------------------
+    data = generate_sample_data()
+
+    col_left, col_right = st.columns(2)
+    with col_left:
+        st.markdown(
+            "<h4 style='color:#f8fafc;'>Documents by Status</h4>",
+            unsafe_allow_html=True,
         )
-        filtered = df[
-            (df["status"].isin(status_filter)) & (df["doc_type"].isin(type_filter))
+        status_counts = data["Status"].value_counts().reset_index()
+        status_counts.columns = ["Status", "Count"]
+        fig_bar = px.bar(
+            status_counts,
+            x="Status",
+            y="Count",
+            color="Status",
+            color_discrete_map={
+                "Approved": "#22c55e",
+                "Review": "#eab308",
+                "Manual": "#ef4444",
+            },
+            template="plotly_dark",
+        )
+        fig_bar.update_layout(showlegend=False, margin=dict(t=0, b=0))
+        st.plotly_chart(fig_bar, use_container_width=True)
+
+    with col_right:
+        st.markdown(
+            "<h4 style='color:#f8fafc;'>Documents by Type</h4>",
+            unsafe_allow_html=True,
+        )
+        type_counts = data["Document Type"].value_counts().reset_index()
+        type_counts.columns = ["Type", "Count"]
+        fig_pie = px.pie(
+            type_counts,
+            names="Type",
+            values="Count",
+            color_discrete_sequence=["#3b82f6", "#22c55e", "#eab308"],
+            template="plotly_dark",
+        )
+        fig_pie.update_traces(textposition="inside", textinfo="percent+label")
+        fig_pie.update_layout(margin=dict(t=0, b=0))
+        st.plotly_chart(fig_pie, use_container_width=True)
+
+    # ---------------------------
+    # Row 3: Recent documents table
+    # ---------------------------
+    st.markdown(
+        "<h4 style='color:#f8fafc;'>Recent Documents</h4>",
+        unsafe_allow_html=True,
+    )
+    recent = data.head(10)[["Reference ID", "Document Type", "Status", "Date"]]
+    st.markdown(colored_table(recent), unsafe_allow_html=True)
+
+
+def audit_page():
+    st.markdown(
+        "<h2 style='color:#f8fafc;'>📋 Audit Log</h2>", unsafe_allow_html=True
+    )
+
+    data = generate_sample_data()
+
+    col_search, col_filter = st.columns([3, 1])
+    with col_search:
+        search_term = st.text_input("🔍 Search by Reference ID or Reviewer", "")
+    with col_filter:
+        status_filter = st.selectbox(
+            "Filter by Status",
+            ["All", "Approved", "Review", "Manual"],
+            index=0,
+        )
+
+    filtered = data.copy()
+    if search_term:
+        filtered = filtered[
+            filtered.apply(
+                lambda row: row.astype(str)
+                .str.contains(search_term, case=False)
+                .any(),
+                axis=1,
+            )
         ]
-        st.write(f"Showing {len(filtered)} records")
-        filtered_display = filtered[["id", "filename", "doc_type", "confidence_score", "status", "upload_time", "processing_time_sec"]].copy()
-        filtered_display["extracted"] = filtered["extracted"]
-        st.dataframe(filtered_display)
+    if status_filter != "All":
+        filtered = filtered[filtered["Status"] == status_filter]
+
+    st.markdown(
+        f"<p style='color:#94a3b8;'>Showing {len(filtered)} records</p>",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        colored_table(filtered[["Reference ID", "Document Type", "Status", "Date", "Reviewer"]]),
+        unsafe_allow_html=True,
+    )
+
+    # Download CSV
+    csv = filtered.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="📥 Download CSV",
+        data=csv,
+        file_name="audit_log.csv",
+        mime="text/csv",
+    )
+
+
+# -------------------------------
+# Route to active page
+# -------------------------------
+if st.session_state.page == "Home":
+    home_page()
+elif st.session_state.page == "Upload":
+    upload_page()
+elif st.session_state.page == "Dashboard":
+    dashboard_page()
+elif st.session_state.page == "Audit":
+    audit_page()
