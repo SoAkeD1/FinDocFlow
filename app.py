@@ -91,3 +91,38 @@ def process_document_bytes(file_bytes: bytes, filename: str) -> dict:
         results["income"] = raw
 
     # --- Confidence ---
+    total_fields = len(results)  # 6
+    found = sum(1 for value in results.values() if value is not None)
+    confidence = round((found / total_fields) * 100) if total_fields else 0
+
+    return {"fields": results, "confidence": confidence}
+
+
+# ---------- Streamlit UI ----------
+st.set_page_config(page_title="FinDocFlow", layout="centered")
+st.markdown("<h1 style='text-align: center;'>FinDocFlow</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color:#64748b;'>Upload a financial document and extract key fields using OCR</p>", unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader("Choose a file", type=["pdf", "png", "jpg", "jpeg"])
+
+if uploaded_file is not None:
+    bytes_data = uploaded_file.getvalue()
+    with st.spinner("Processing document…"):
+        extraction = process_document_bytes(bytes_data, uploaded_file.name)
+
+    # Simulate a brief “decision” step (unchanged for illustration)
+    time.sleep(0.3)
+    st.success("Processing complete!")
+    decision = random.choice(["Approved", "Review Required", "Rejected"])
+
+    # Extract fields and confidence
+    fields = extraction["fields"]
+    confidence = extraction["confidence"]
+
+    # Build a friendly table of extracted fields
+    extracted_items = [
+        ("Applicant Name", fields.get("name")),
+        ("PAN", fields.get("pan")),
+        ("Date (Detected)", fields.get("date")),
+        ("Loan Amount", fields.get("loan_amount")),
+        ("Account Number", fields.get("account
