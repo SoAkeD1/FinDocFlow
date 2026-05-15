@@ -7,10 +7,21 @@ import io
 import pytesseract
 from PIL import Image
 import logging
+import plotly.express as px
+import base64
+import database
+from database import get_all_documents, get_document_by_id
 
 logger = logging.getLogger(__name__)
 
+# ---------- Page config (must be first Streamlit command) ----------
+st.set_page_config(page_title="FinDocFlow", layout="wide", page_icon="📄")
 
+# ---------- Ensure DB tables exist ----------
+database.create_tables()
+
+
+# ---------- OCR extraction function (unchanged from original) ----------
 def process_document_bytes(file_bytes: bytes, filename: str) -> dict:
     """
     Process uploaded document bytes using Tesseract OCR.
@@ -98,61 +109,51 @@ def process_document_bytes(file_bytes: bytes, filename: str) -> dict:
     return {"fields": results, "confidence": confidence}
 
 
-# ---------- Streamlit UI ----------
-st.set_page_config(page_title="FinDocFlow", layout="centered")
-st.markdown("<h1 style='text-align: center;'>FinDocFlow</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color:#64748b;'>Upload a financial document and extract key fields using OCR</p>", unsafe_allow_html=True)
-
-uploaded_file = st.file_uploader("Choose a file", type=["pdf", "png", "jpg", "jpeg"])
-
-if uploaded_file is not None:
-    bytes_data = uploaded_file.getvalue()
-    with st.spinner("Processing document…"):
-        extraction = process_document_bytes(bytes_data, uploaded_file.name)
-
-    # Simulate a brief “decision” step (unchanged for illustration)
-    time.sleep(0.3)
-    st.success("Processing complete!")
-    decision = random.choice(["Approved", "Review Required", "Rejected"])
-
-    # Extract fields and confidence
-    fields = extraction["fields"]
-    confidence = extraction["confidence"]
-
-    # Build a friendly table of extracted fields
-    extracted_items = [
-        ("Applicant Name", fields.get("name")),
-        ("PAN", fields.get("pan")),
-        ("Date (Detected)", fields.get("date")),
-        ("Loan Amount", fields.get("loan_amount")),
-        ("Account Number", fields.get("account_number")),
-        ("Income", fields.get("income")),
-    ]
-
-    # Convert to DataFrame for display
-    df_extracted = pd.DataFrame(extracted_items, columns=["Field", "Value"]).dropna(subset=["Value"])
-
-    if not df_extracted.empty:
-        st.markdown("### Extracted Fields")
-        st.dataframe(df_extracted, use_container_width=True)
-    else:
-        st.warning("No fields could be extracted. Please check the document quality.")
-
-    # Decision display (random)
-    st.markdown("### Decision")
-    status_color = {
-        "Approved": "#22c55e",
-        "Review Required": "#f59e0b",
-        "Rejected": "#ef4444",
-    }.get(decision, "#6b7280")
-
+# ---------- Page: Home ----------
+def home_page():
+    st.title("🏠 Welcome to FinDocFlow")
     st.markdown(
-        f"<div style='background:{status_color}; padding:12px; border-radius:8px;'>"
-        f"<span style='color:white; font-weight:bold;'>Decision: {decision}</span></div>",
-        unsafe_allow_html=True,
+        """
+        **FinDocFlow** – Intelligent Document Processing for Financial Documents.
+
+        Use the sidebar to navigate:
+        - **📤 Upload & Process** – Extract key fields from scanned documents using OCR.
+        - **📊 Dashboard** – View summary statistics and charts for processed documents.
+        - **📋 Audit Log** – Search, review and export document processing history.
+        """
     )
 
-    # Confidence
-    st.markdown("<p style='color:#94a3b8; margin-top:24px;'>Confidence Score</p>", unsafe_allow_html=True)
-    st.progress(int(confidence))
-    st.caption(f"{confidence}% confidence")
+
+# ---------- Page: Upload & Process ----------
+def upload_page():
+    st.subheader("📤 Upload & Process")
+    st.markdown(
+        "Upload a financial document and extract key fields using OCR."
+    )
+    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "png", "jpg", "jpeg"])
+    if uploaded_file is not None:
+        bytes_data = uploaded_file.getvalue()
+        with st.spinner("Processing document…"):
+            extraction = process_document_bytes(bytes_data, uploaded_file.name)
+
+        # Simulate a brief “decision” step (unchanged for illustration)
+        time.sleep(0.3)
+        st.success("Processing complete!")
+        decision = random.choice(["Approved", "Review Required", "Rejected"])
+
+        # Extract fields and confidence
+        fields = extraction["fields"]
+        confidence = extraction["confidence"]
+
+        # Build a friendly table of extracted fields
+        extracted_items = [
+            ("Applicant Name", fields.get("name")),
+            ("PAN", fields.get("pan")),
+            ("Date (Detected)", fields.get("date")),
+            ("Loan Amount", fields.get("loan_amount")),
+            ("Account Number", fields.get("account_number")),
+            ("Income", fields.get("income")),
+        ]
+
+        # Convert to DataFrame for display
+        df_ext
