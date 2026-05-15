@@ -1,0 +1,31 @@
+if uploaded_file is not None:
+    bytes_data = uploaded_file.getvalue()
+    with st.spinner("Processing document…"):
+        extraction = ocr_engine.process_document_bytes(bytes_data, uploaded_file.name)
+        # extraction returns dict with 'fields' and 'confidence'
+    # simulate processing steps?
+    # They may want to remove the fake steps.
+    # We'll replace steps with just spinner and maybe progress steps? Better to integrate actual processing steps inside ocr_engine? We could leave existing step messages but adapt: after extraction, show success message.
+    st.success("Processing complete!")
+    # decision still random (maybe later) keep.
+    # Extract fields:
+    fields = extraction['fields']
+    confidence = extraction['confidence']
+    # show extracted fields in a DataFrame
+    # Build list of dict for display
+    extracted_items = [
+        ("Applicant Name", fields.get('name')),
+        ("PAN", fields.get('pan')),
+        ("Date (Detected)", fields.get('date')),
+        ("Loan Amount", fields.get('loan_amount')),
+        ("Account Number", fields.get('account_number')),
+        ("Income", fields.get('income')),
+        # maybe remove old fields like Status, Document Date, but we can include.
+    ]
+    # filter out None values?
+    df_extracted = pd.DataFrame(extracted_items, columns=["Field", "Value"]).dropna()
+    ...
+    # Show confidence
+    st.markdown("<p style='color:#94a3b8;'>Confidence Score</p>", unsafe_allow_html=True)
+    st.progress(int(confidence), f"{confidence}%")
+    st.caption(f"{confidence}% confidence")
