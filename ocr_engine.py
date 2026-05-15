@@ -152,4 +152,4 @@ def process_document_bytes(file_bytes, filename=''):
     date = extract_date(full_text)
     loan_amount = extract_loan_amount(full_text)
     account_number = extract_account_number(full_text)
-    income
+    income = extract_income(full_text)
