@@ -234,26 +234,105 @@ def home_page():
 
 # ---------- Page: Upload & Process ----------
 def upload_page():
-    st.subheader("📤 Upload & Process")
-    st.markdown(
-        "Upload a financial document and extract key fields using OCR."
-    )
+    st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+
+    .upload-hero { text-align: center; padding: 2rem 1rem 1rem; }
+    .upload-hero h2 { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; color: #f0a500; margin-bottom: 0.3rem; }
+    .upload-hero p { font-family: 'DM Sans', sans-serif; color: #8b92a5; font-size: 1rem; }
+
+    .supported-row { display: flex; gap: 12px; justify-content: center; margin: 1.2rem 0 2rem; flex-wrap: wrap; }
+    .fmt-badge { background: #161b27; border: 1px solid #2a2f3e; border-radius: 8px; padding: 8px 18px; font-family: 'Syne', sans-serif; color: #f0a500; font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; }
+
+    .info-strip { display: flex; gap: 12px; justify-content: center; margin: 1.5rem 0; flex-wrap: wrap; }
+    .info-chip { background: #161b27; border: 1px solid #2a2f3e; border-radius: 20px; padding: 6px 16px; font-family: 'DM Sans', sans-serif; color: #8b92a5; font-size: 0.82rem; }
+    .info-chip span { color: #f0a500; font-weight: 700; }
+
+    .result-header { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700; color: #ffffff; margin: 1.5rem 0 0.8rem; border-left: 3px solid #f0a500; padding-left: 12px; }
+
+    .decision-approved { background: #0d2b1a; border: 1px solid #1a6b3a; border-radius: 10px; padding: 14px 20px; font-family: 'Syne', sans-serif; color: #2ecc71; font-size: 1.1rem; font-weight: 700; text-align: center; margin: 1rem 0; }
+    .decision-review { background: #2b2200; border: 1px solid #6b5000; border-radius: 10px; padding: 14px 20px; font-family: 'Syne', sans-serif; color: #f0a500; font-size: 1.1rem; font-weight: 700; text-align: center; margin: 1rem 0; }
+    .decision-rejected { background: #2b0d0d; border: 1px solid #6b1a1a; border-radius: 10px; padding: 14px 20px; font-family: 'Syne', sans-serif; color: #e74c3c; font-size: 1.1rem; font-weight: 700; text-align: center; margin: 1rem 0; }
+
+    .gold-divider { height: 2px; background: linear-gradient(90deg, transparent, #f0a500, transparent); margin: 1.5rem auto; width: 60%; }
+    .section-hdr { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: #ffffff; border-left: 3px solid #f0a500; padding-left: 12px; margin-bottom: 1rem; }
+    </style>
+
+    <div class="upload-hero">
+        <h2>📤 Upload & Process</h2>
+        <p>Submit a financial document and let FinDocFlow extract key fields instantly using OCR</p>
+    </div>
+
+    <div class="supported-row">
+        <div class="fmt-badge">📄 PDF</div>
+        <div class="fmt-badge">🖼️ JPG</div>
+        <div class="fmt-badge">🖼️ PNG</div>
+        <div class="fmt-badge">🖼️ JPEG</div>
+    </div>
+
+    <div class="info-strip">
+        <div class="info-chip">⚡ Auto-approved if confidence <span>&gt;90%</span></div>
+        <div class="info-chip">🔍 Review required if <span>70–90%</span></div>
+        <div class="info-chip">🚨 Manual check if <span>&lt;70%</span></div>
+    </div>
+
+    <div class="gold-divider"></div>
+    """, unsafe_allow_html=True)
+
     uploaded_file = st.file_uploader("Choose a file", type=["pdf", "png", "jpg", "jpeg"])
+
+    st.markdown("""
+    <div style="margin-top: 2rem;">
+    <div class="section-hdr">⚙️ What happens after upload?</div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-bottom:2rem;">
+        <div style="background:#161b27; border:1px solid #2a2f3e; border-radius:10px; padding:16px 20px; flex:1; min-width:160px; max-width:220px; text-align:center;">
+            <div style="font-size:1.8rem;">🔍</div>
+            <div style="font-family:'Syne',sans-serif; color:#f0a500; font-size:0.85rem; font-weight:700; margin:6px 0;">OCR Scan</div>
+            <div style="font-family:'DM Sans',sans-serif; color:#8b92a5; font-size:0.8rem;">Tesseract reads every field from your document</div>
+        </div>
+        <div style="background:#161b27; border:1px solid #2a2f3e; border-radius:10px; padding:16px 20px; flex:1; min-width:160px; max-width:220px; text-align:center;">
+            <div style="font-size:1.8rem;">🧠</div>
+            <div style="font-family:'Syne',sans-serif; color:#f0a500; font-size:0.85rem; font-weight:700; margin:6px 0;">Field Extraction</div>
+            <div style="font-family:'DM Sans',sans-serif; color:#8b92a5; font-size:0.8rem;">Name, PAN, date, loan amount, account number pulled out</div>
+        </div>
+        <div style="background:#161b27; border:1px solid #2a2f3e; border-radius:10px; padding:16px 20px; flex:1; min-width:160px; max-width:220px; text-align:center;">
+            <div style="font-size:1.8rem;">🎯</div>
+            <div style="font-family:'Syne',sans-serif; color:#f0a500; font-size:0.85rem; font-weight:700; margin:6px 0;">Confidence Score</div>
+            <div style="font-family:'DM Sans',sans-serif; color:#8b92a5; font-size:0.8rem;">Each field scored and routed automatically</div>
+        </div>
+        <div style="background:#161b27; border:1px solid #2a2f3e; border-radius:10px; padding:16px 20px; flex:1; min-width:160px; max-width:220px; text-align:center;">
+            <div style="font-size:1.8rem;">📋</div>
+            <div style="font-family:'Syne',sans-serif; color:#f0a500; font-size:0.85rem; font-weight:700; margin:6px 0;">Audit Logged</div>
+            <div style="font-family:'DM Sans',sans-serif; color:#8b92a5; font-size:0.8rem;">Every action saved to audit trail automatically</div>
+        </div>
+    </div>
+
+    <div class="section-hdr">💡 Tips for best results</div>
+    <div style="background:#161b27; border:1px solid #2a2f3e; border-radius:10px; padding:18px 24px; font-family:'DM Sans',sans-serif; color:#8b92a5; font-size:0.88rem; line-height:2;">
+        ✅ &nbsp;Use clear, high-resolution scans (300 DPI or above)<br>
+        ✅ &nbsp;Ensure document is not tilted or cropped<br>
+        ✅ &nbsp;PAN number must be visible for KYC documents<br>
+        ✅ &nbsp;Loan amount should be clearly printed, not handwritten<br>
+        ✅ &nbsp;Bank statements should include account number on every page
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     if uploaded_file is not None:
         bytes_data = uploaded_file.getvalue()
         with st.spinner("Processing document…"):
             extraction = process_document_bytes(bytes_data, uploaded_file.name)
 
-        # Simulate a brief “decision” step (unchanged for illustration)
         time.sleep(0.3)
-        st.success("Processing complete!")
+        st.success("✅ Processing complete!")
         decision = random.choice(["Approved", "Review Required", "Rejected"])
 
-        # Extract fields and confidence
         fields = extraction["fields"]
         confidence = extraction["confidence"]
 
-        # Build a friendly table of extracted fields
+        st.markdown('<div class="result-header">📋 Extracted Fields</div>', unsafe_allow_html=True)
+
         extracted_items = [
             ("Applicant Name", fields.get("name")),
             ("PAN", fields.get("pan")),
@@ -263,13 +342,17 @@ def upload_page():
             ("Income", fields.get("income")),
         ]
 
-        # Convert to DataFrame for display
         df_ext = pd.DataFrame(extracted_items, columns=["Field", "Value"])
         st.dataframe(df_ext, use_container_width=True)
 
-        st.info(f"**Decision:** {decision}   |   **Confidence:** {confidence}%")
+        st.markdown('<div class="result-header">🎯 Decision & Confidence</div>', unsafe_allow_html=True)
 
-
+        if decision == "Approved":
+            st.markdown(f'<div class="decision-approved">✅ APPROVED &nbsp;|&nbsp; Confidence: {confidence}%</div>', unsafe_allow_html=True)
+        elif decision == "Review Required":
+            st.markdown(f'<div class="decision-review">⚠️ REVIEW REQUIRED &nbsp;|&nbsp; Confidence: {confidence}%</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="decision-rejected">❌ MANUAL CHECK REQUIRED &nbsp;|&nbsp; Confidence: {confidence}%</div>', unsafe_allow_html=True)
 # ---------- Page: Dashboard ----------
 def dashboard_page():
     st.subheader("📊 Dashboard")
