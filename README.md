@@ -1,1 +1,2 @@
 # FinDocFlow
+fix author config
