@@ -112,125 +112,18 @@ def process_document_bytes(file_bytes: bytes, filename: str) -> dict:
 
 # ---------- Page: Home ----------
 def home_page():
-    st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+    st.title("🏠 Welcome to FinDocFlow")
+    st.markdown(
+        """
+        **FinDocFlow** – Intelligent Document Processing for Financial Documents.
 
-    .hero { text-align: center; padding: 3rem 1rem 1.5rem; }
-    .hero h1 { font-family: 'Syne', sans-serif; font-size: 3.2rem; font-weight: 800; color: #f0a500; margin-bottom: 0.3rem; }
-    .hero p { font-family: 'DM Sans', sans-serif; font-size: 1.15rem; color: #ffffff; margin-bottom: 0.5rem; }
-    .hero small { font-family: 'DM Sans', sans-serif; color: #8b92a5; font-size: 0.95rem; }
-    .gold-divider { height: 2px; background: linear-gradient(90deg, transparent, #f0a500, transparent); margin: 2rem auto; width: 60%; }
+        Use the sidebar to navigate:
+        - **📤 Upload & Process** – Extract key fields from scanned documents using OCR.
+        - **📊 Dashboard** – View summary statistics and charts for processed documents.
+        - **📋 Audit Log** – Search, review and export document processing history.
+        """
+    )
 
-    .section-title { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 700; color: #ffffff; text-align: center; margin: 2.5rem 0 1.2rem; }
-
-    .steps-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; }
-    .step-card { background: #161b27; border: 1px solid #2a2f3e; border-left: 3px solid #f0a500; border-radius: 12px; padding: 20px; flex: 1; min-width: 180px; max-width: 220px; animation: fadeSlideUp 0.5s ease both; }
-    .step-card:nth-child(1) { animation-delay: 0.1s; }
-    .step-card:nth-child(2) { animation-delay: 0.2s; }
-    .step-card:nth-child(3) { animation-delay: 0.3s; }
-    .step-card:nth-child(4) { animation-delay: 0.4s; }
-    .step-icon { font-size: 2rem; margin-bottom: 8px; }
-    .step-num { font-family: 'Syne', sans-serif; color: #f0a500; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-    .step-title { font-family: 'Syne', sans-serif; color: #ffffff; font-size: 1rem; font-weight: 700; margin: 4px 0; }
-    .step-desc { font-family: 'DM Sans', sans-serif; color: #8b92a5; font-size: 0.85rem; }
-
-    .stats-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; }
-    .stat-box { background: #161b27; border: 1px solid #2a2f3e; border-top: 3px solid #f0a500; border-radius: 12px; padding: 18px 24px; text-align: center; flex: 1; min-width: 160px; }
-    .stat-icon { font-size: 1.5rem; }
-    .stat-val { font-family: 'Syne', sans-serif; color: #f0a500; font-size: 1rem; font-weight: 700; margin: 4px 0; }
-    .stat-label { font-family: 'DM Sans', sans-serif; color: #8b92a5; font-size: 0.82rem; }
-
-    .doc-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; }
-    .doc-card { background: #161b27; border: 1px solid #2a2f3e; border-radius: 12px; padding: 22px; flex: 1; min-width: 180px; max-width: 260px; transition: border-color 0.3s, transform 0.3s; }
-    .doc-card:hover { border-color: #f0a500; transform: translateY(-4px); }
-    .doc-icon { font-size: 2rem; margin-bottom: 8px; }
-    .doc-title { font-family: 'Syne', sans-serif; color: #ffffff; font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
-    .doc-desc { font-family: 'DM Sans', sans-serif; color: #8b92a5; font-size: 0.85rem; }
-
-    .cta-banner { background: #161b27; border-left: 4px solid #f0a500; border-radius: 12px; padding: 24px 32px; text-align: center; margin: 1rem 0 2rem; }
-    .cta-banner h3 { font-family: 'Syne', sans-serif; color: #ffffff; font-size: 1.4rem; margin-bottom: 6px; }
-    .cta-banner p { font-family: 'DM Sans', sans-serif; color: #8b92a5; font-size: 0.95rem; }
-
-    @keyframes fadeSlideUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    </style>
-
-    <div class="hero">
-        <h1>FinDocFlow</h1>
-        <p>AI-Powered Document Intelligence for Indian NBFCs</p>
-        <small>From scanned paper to structured data in seconds — no manual entry, no errors.</small>
-    </div>
-    <div class="gold-divider"></div>
-
-    <div class="section-title">How It Works</div>
-    <div class="steps-row">
-        <div class="step-card">
-            <div class="step-icon">📤</div>
-            <div class="step-num">Step 1</div>
-            <div class="step-title">Upload Document</div>
-            <div class="step-desc">Submit PDF, JPG or PNG files from any device</div>
-        </div>
-        <div class="step-card">
-            <div class="step-icon">🔍</div>
-            <div class="step-num">Step 2</div>
-            <div class="step-title">OCR Extraction</div>
-            <div class="step-desc">Tesseract reads PAN, name, dates, loan amount, account number</div>
-        </div>
-        <div class="step-card">
-            <div class="step-icon">🎯</div>
-            <div class="step-num">Step 3</div>
-            <div class="step-title">Confidence Scoring</div>
-            <div class="step-desc">Auto-approved above 90%, flagged for review below 70%</div>
-        </div>
-        <div class="step-card">
-            <div class="step-icon">📋</div>
-            <div class="step-num">Step 4</div>
-            <div class="step-title">Audit & Export</div>
-            <div class="step-desc">Full audit trail logged, PDF reports generated instantly</div>
-        </div>
-    </div>
-
-    <div class="section-title">By The Numbers</div>
-    <div class="stats-row">
-        <div class="stat-box"><div class="stat-icon">⚡</div><div class="stat-val">Auto-Approved</div><div class="stat-label">&gt;90% Confidence</div></div>
-        <div class="stat-box"><div class="stat-icon">🏦</div><div class="stat-val">4 Doc Types</div><div class="stat-label">KYC · Loan · Bank · Income</div></div>
-        <div class="stat-box"><div class="stat-icon">🔒</div><div class="stat-val">Audit Trail</div><div class="stat-label">Every action logged</div></div>
-        <div class="stat-box"><div class="stat-icon">📄</div><div class="stat-val">PDF Export</div><div class="stat-label">Reports on demand</div></div>
-    </div>
-
-    <div class="section-title">What FinDocFlow Processes</div>
-    <div class="doc-row">
-        <div class="doc-card">
-            <div class="doc-icon">🪪</div>
-            <div class="doc-title">KYC Documents</div>
-            <div class="doc-desc">Aadhaar, PAN, Voter ID — extract name, DOB, ID numbers instantly</div>
-        </div>
-        <div class="doc-card">
-            <div class="doc-icon">📝</div>
-            <div class="doc-title">Loan Applications</div>
-            <div class="doc-desc">Capture applicant name, loan amount, date, co-applicant details</div>
-        </div>
-        <div class="doc-card">
-            <div class="doc-icon">🏦</div>
-            <div class="doc-title">Bank Statements</div>
-            <div class="doc-desc">Parse account number, transactions, income patterns</div>
-        </div>
-    </div>
-
-    <div class="cta-banner">
-        <h3>Ready to digitise your NBFC back-office?</h3>
-        <p>Upload your first document and see FinDocFlow in action.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("🚀 Go to Upload & Process", use_container_width=True):
-            st.session_state.page = "Upload"
-            st.rerun()
 
 # ---------- Page: Upload & Process ----------
 def upload_page():
