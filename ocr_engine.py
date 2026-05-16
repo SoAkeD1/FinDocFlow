@@ -1,34 +1,4 @@
 import re
-import io
-import time
-import pytesseract
-from PIL import Image
-import validators
-
-def classify_document_type(text):
-    """
-    Return the category with the highest keyword‑match score.
-    Possible categories:
-      'KYC Document', 'Loan Application', 'Bank Statement',
-      'Income Certificate', 'Credit Card Details', 'Address Proof',
-      'Birth Certificate', 'Education Certificate', 'Property Document',
-      'Employment Proof', 'Photo ID', 'Presentation/Other', 'Unknown Document'
-    """
-    text_lower = text.lower()
-
-    # Updated keyword sets per specification (including new categories)
-    categories = {
-        "KYC Document": {
-            "pan", "aadhaar", "voter", "passport", "date of birth", "dob", "permanent account", "name"
-        },
-        "Loan Application": {
-            "loan application", "loan amount", "loan purpose", "applicant", "co-applicant", "emi", "repayment", "name"
-        },
-        "Bank Statement": {
-            "balance", "opening balance", "closing balance", "bank statement", "transaction", "debit", "credit", "ifsc", "name"
-        },
-        "Income Certificate": {
-            "income", "salary", "form 16", "itr", "tax return", "employer", "name"
-        },
+...
         "Credit Card Details": {
             "credit score", "civil score", "swift code", "name
