@@ -78,12 +78,23 @@ def extract_pan(text):
 
 
 def extract_name(text):
-    lines = text.split('\n')
-    for i, line in enumerate(lines):
-        if 'name' in line.lower() and ':' in line:
-            parts = line.split(':', 1)
-            if len(parts) > 1 and parts[1].strip():
-                return parts[1].strip()
+    # Label strings that may precede the actual name (case‑insensitive comparison).
+    prefixes = [
+        "account holder", "applicant name", "applicant",
+        "name", "customer name", "holder name",
+        "pan name", "account holder name"
+    ]
+
+    for line in text.split('\n'):
+        # Only consider lines that have a colon.
+        if ':' not in line:
+            continue
+        label, colon, rest = line.partition(':')
+        label_clean = label.strip().lower()
+        if label_clean in prefixes:
+            value = rest.strip()
+            if value:
+                return value
     return None
 
 
