@@ -124,4 +124,23 @@ def extract_fields_by_type(doc_type, text):
         for line in lines:
             line_lower = line.lower()
             if any(kw in line_lower for kw in keywords):
-                nums = re.findall(r
+                nums = re.findall(r'[₹Rs.\s]*([\d,]+\.?\d*)', line)
+                if nums:
+                    return nums[0].replace(',', '')
+        return None
+
+    if doc_type == "Bank Statement":
+        fields["Account Holder"] = find_value(["account holder", "account holder name", "name"])
+        fields["Account Number"] = find_value(["account number", "account no"])
+        fields["IFSC Code"] = find_value(["ifsc", "ifsc code"])
+        fields["Opening Balance"] = find_amount(["opening balance"])
+        fields["Closing Balance"] = find_amount(["closing balance"])
+        fields["Branch"] = find_value(["branch"])
+
+    elif doc_type == "Loan Application":
+        fields["Applicant Name"] = find_value(["full name", "applicant name", "name"])
+        fields["PAN"] = extract_pan(text)
+        fields["Loan Amount"] = find_amount(["loan amount"])
+        fields["Loan Type"] = find_value(["loan type"])
+        fields["Tenure"] = find_value(["tenure"])
+        fields["EM
