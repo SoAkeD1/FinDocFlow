@@ -106,49 +106,169 @@ def home_page():
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500&display=swap');
-    .fdf-nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 48px; background: #0a0f1e; border-bottom: 1px solid #1f2937; margin: -1rem -1rem 0 -1rem; }
-    .fdf-logo { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: #f0a500; }
-    .fdf-nav-links { display: flex; gap: 32px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: #ffffff; }
-    .fdf-hero { background: #0a0f1e; background-image: linear-gradient(rgba(30,64,175,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(30,64,175,0.08) 1px, transparent 1px); background-size: 48px 48px; min-height: 520px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 80px 48px 60px; margin: 0 -1rem; position: relative; }
-    .fdf-badge { display: inline-block; border: 1px solid #f0a500; border-radius: 999px; padding: 6px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: #f0a500; margin-bottom: 28px; background: rgba(240,165,0,0.06); }
-    .fdf-hero h1 { font-family: 'Syne', sans-serif; font-size: 4.2rem; font-weight: 900; color: #ffffff; line-height: 1.05; margin: 0 0 4px; letter-spacing: -1px; }
-    .fdf-hero h1 span { color: #f0a500; display: block; }
-    .fdf-hero p { font-family: 'DM Sans', sans-serif; font-size: 1.05rem; color: #6b7280; max-width: 520px; margin: 20px auto 36px; line-height: 1.6; }
-    .fdf-trust { background: #0a0f1e; border-top: 1px solid #1f2937; border-bottom: 1px solid #1f2937; padding: 18px 48px; text-align: center; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: #6b7280; margin: 0 -1rem; }
-    .fdf-trust span { color: #f0a500; margin: 0 6px; }
-    .fdf-section { background: #0a0f1e; padding: 64px 48px; margin: 0 -1rem; }
+
+    .fdf-nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 48px; background: rgba(10,5,30,0.95); border-bottom: 1px solid rgba(255,255,255,0.08); margin: -1rem -1rem 0 -1rem; backdrop-filter: blur(10px); }
+    .fdf-logo { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; }
+    .fdf-logo span { color: #a78bfa; }
+    .fdf-nav-links { display: flex; gap: 32px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: rgba(255,255,255,0.7); }
+
+    .fdf-hero {
+        background:
+            radial-gradient(ellipse at 20% 50%, rgba(109,40,217,0.4) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 20%, rgba(139,92,246,0.3) 0%, transparent 50%),
+            radial-gradient(ellipse at 60% 80%, rgba(76,29,149,0.35) 0%, transparent 50%),
+            linear-gradient(180deg, #0a051e 0%, #150a35 50%, #0d0520 100%);
+        min-height: 560px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 80px 48px 60px;
+        margin: 0 -1rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .fdf-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(circle at 1px 1px, rgba(167,139,250,0.15) 1px, transparent 0);
+        background-size: 40px 40px;
+        pointer-events: none;
+    }
+    .fdf-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 120px;
+        background: linear-gradient(to bottom, transparent, #0a051e);
+        pointer-events: none;
+    }
+
+    .fdf-floating-docs {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    .fdf-doc-float {
+        position: absolute;
+        background: rgba(139,92,246,0.08);
+        border: 1px solid rgba(167,139,250,0.15);
+        border-radius: 8px;
+        backdrop-filter: blur(4px);
+    }
+    .fdf-doc-float:nth-child(1) { width: 80px; height: 100px; top: 15%; left: 8%; transform: rotate(-12deg); animation: floatDoc 6s ease-in-out infinite; }
+    .fdf-doc-float:nth-child(2) { width: 60px; height: 80px; top: 25%; right: 10%; transform: rotate(8deg); animation: floatDoc 8s ease-in-out infinite 1s; }
+    .fdf-doc-float:nth-child(3) { width: 70px; height: 90px; bottom: 20%; left: 12%; transform: rotate(5deg); animation: floatDoc 7s ease-in-out infinite 2s; }
+    .fdf-doc-float:nth-child(4) { width: 50px; height: 65px; bottom: 25%; right: 8%; transform: rotate(-8deg); animation: floatDoc 9s ease-in-out infinite 0.5s; }
+    .fdf-doc-float:nth-child(5) { width: 90px; height: 110px; top: 50%; left: 3%; transform: rotate(15deg); animation: floatDoc 7s ease-in-out infinite 3s; }
+    .fdf-doc-float:nth-child(6) { width: 65px; height: 85px; top: 10%; right: 22%; transform: rotate(-5deg); animation: floatDoc 10s ease-in-out infinite 1.5s; }
+
+    @keyframes floatDoc {
+        0%, 100% { transform: translateY(0px) rotate(var(--r, -12deg)); opacity: 0.6; }
+        50% { transform: translateY(-15px) rotate(var(--r, -12deg)); opacity: 1; }
+    }
+
+    .fdf-scan-line {
+        position: absolute;
+        left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(167,139,250,0.6), transparent);
+        animation: scanLine 4s linear infinite;
+        pointer-events: none;
+    }
+    @keyframes scanLine {
+        0% { top: 10%; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: 90%; opacity: 0; }
+    }
+
+    .fdf-badge { display: inline-block; border: 1px solid rgba(167,139,250,0.4); border-radius: 999px; padding: 6px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: #c4b5fd; margin-bottom: 28px; background: rgba(139,92,246,0.12); position: relative; z-index: 2; }
+
+    .fdf-hero h1 { font-family: 'Syne', sans-serif; font-size: 4.2rem; font-weight: 900; color: #ffffff; line-height: 1.05; margin: 0 0 4px; letter-spacing: -2px; position: relative; z-index: 2; }
+    .fdf-hero h1 span { background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 50%, #7c3aed 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; display: block; }
+    .fdf-hero p { font-family: 'DM Sans', sans-serif; font-size: 1.05rem; color: rgba(255,255,255,0.6); max-width: 520px; margin: 20px auto 36px; line-height: 1.7; position: relative; z-index: 2; }
+
+    .fdf-trust { background: rgba(10,5,30,0.9); border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 16px 48px; text-align: center; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: rgba(255,255,255,0.4); margin: 0 -1rem; letter-spacing: 0.5px; }
+    .fdf-trust span { color: #a78bfa; margin: 0 8px; }
+
+    .fdf-section { background: #0a051e; padding: 64px 48px; margin: 0 -1rem; }
     .fdf-section-title { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: #ffffff; text-align: center; margin-bottom: 40px; }
+    .fdf-section-title span { color: #a78bfa; }
+
     .fdf-steps { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 64px; }
-    .fdf-step { background: #111827; border: 1px solid #1f2937; border-left: 3px solid #f0a500; border-radius: 12px; padding: 24px 20px; flex: 1; min-width: 180px; max-width: 230px; }
+    .fdf-step { background: rgba(139,92,246,0.06); border: 1px solid rgba(167,139,250,0.15); border-left: 3px solid #7c3aed; border-radius: 12px; padding: 24px 20px; flex: 1; min-width: 180px; max-width: 230px; transition: border-color 0.3s, transform 0.3s; }
+    .fdf-step:hover { border-color: rgba(167,139,250,0.5); transform: translateY(-4px); }
     .fdf-step-icon { font-size: 2rem; margin-bottom: 10px; }
-    .fdf-step-num { font-family: 'Syne', sans-serif; color: #f0a500; font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+    .fdf-step-num { font-family: 'Syne', sans-serif; color: #a78bfa; font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
     .fdf-step-title { font-family: 'Syne', sans-serif; color: #ffffff; font-size: 1rem; font-weight: 700; margin: 6px 0 4px; }
-    .fdf-step-desc { font-family: 'DM Sans', sans-serif; color: #6b7280; font-size: 0.82rem; line-height: 1.5; }
+    .fdf-step-desc { font-family: 'DM Sans', sans-serif; color: rgba(255,255,255,0.5); font-size: 0.82rem; line-height: 1.5; }
+
     .fdf-stats { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 64px; }
-    .fdf-stat { background: #111827; border: 1px solid #1f2937; border-top: 3px solid #f0a500; border-radius: 12px; padding: 24px 28px; flex: 1; min-width: 160px; text-align: center; }
+    .fdf-stat { background: rgba(139,92,246,0.06); border: 1px solid rgba(167,139,250,0.15); border-top: 3px solid #7c3aed; border-radius: 12px; padding: 24px 28px; flex: 1; min-width: 160px; text-align: center; }
     .fdf-stat-icon { font-size: 1.6rem; margin-bottom: 8px; }
-    .fdf-stat-val { font-family: 'Syne', sans-serif; color: #f0a500; font-size: 1rem; font-weight: 700; }
-    .fdf-stat-label { font-family: 'DM Sans', sans-serif; color: #6b7280; font-size: 0.8rem; margin-top: 4px; }
+    .fdf-stat-val { font-family: 'Syne', sans-serif; color: #c4b5fd; font-size: 1rem; font-weight: 700; }
+    .fdf-stat-label { font-family: 'DM Sans', sans-serif; color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-top: 4px; }
+
     .fdf-docs { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 64px; }
-    .fdf-doc { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 28px 24px; flex: 1; min-width: 200px; max-width: 280px; transition: border-color 0.3s; }
-    .fdf-doc:hover { border-color: #f0a500; }
+    .fdf-doc { background: rgba(139,92,246,0.06); border: 1px solid rgba(167,139,250,0.12); border-radius: 12px; padding: 28px 24px; flex: 1; min-width: 200px; max-width: 280px; transition: border-color 0.3s, transform 0.3s; }
+    .fdf-doc:hover { border-color: rgba(167,139,250,0.5); transform: translateY(-4px); }
     .fdf-doc-icon { font-size: 2rem; margin-bottom: 10px; }
     .fdf-doc-title { font-family: 'Syne', sans-serif; color: #ffffff; font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
-    .fdf-doc-desc { font-family: 'DM Sans', sans-serif; color: #6b7280; font-size: 0.83rem; line-height: 1.5; }
-    .fdf-cta { background: #111827; border: 1px solid #1f2937; border-left: 4px solid #f0a500; border-radius: 12px; padding: 40px; text-align: center; margin: 0 auto; max-width: 700px; }
+    .fdf-doc-desc { font-family: 'DM Sans', sans-serif; color: rgba(255,255,255,0.45); font-size: 0.83rem; line-height: 1.5; }
+
+    .fdf-cta { background: linear-gradient(135deg, rgba(109,40,217,0.2), rgba(139,92,246,0.1)); border: 1px solid rgba(167,139,250,0.25); border-radius: 16px; padding: 48px; text-align: center; margin: 0 auto; max-width: 700px; }
     .fdf-cta h3 { font-family: 'Syne', sans-serif; color: #ffffff; font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
-    .fdf-cta p { font-family: 'DM Sans', sans-serif; color: #6b7280; font-size: 0.95rem; margin-bottom: 24px; }
+    .fdf-cta p { font-family: 'DM Sans', sans-serif; color: rgba(255,255,255,0.5); font-size: 0.95rem; margin-bottom: 0; }
     </style>
-    <div class="fdf-nav"><div class="fdf-logo">FinDocFlow</div><div class="fdf-nav-links"><span>Home</span><span>Upload</span><span>Dashboard</span><span>Audit Log</span></div></div>
-    <div class="fdf-hero"><div class="fdf-badge">🏆 Sundaram Pitch Fest 2026 — IIT Kharagpur</div><h1>Automate Your<span>Document Back-Office</span></h1><p>AI-powered OCR that reads, classifies and routes financial documents for Indian NBFCs — zero manual entry.</p></div>
+
+    <div class="fdf-nav"><div class="fdf-logo">Fin<span>Doc</span>Flow</div></div>
+
+    <div class="fdf-hero">
+        <div class="fdf-floating-docs">
+            <div class="fdf-doc-float"></div>
+            <div class="fdf-doc-float"></div>
+            <div class="fdf-doc-float"></div>
+            <div class="fdf-doc-float"></div>
+            <div class="fdf-doc-float"></div>
+            <div class="fdf-doc-float"></div>
+        </div>
+        <div class="fdf-scan-line"></div>
+        <div class="fdf-badge">🏆 Sundaram Pitch Fest 2026 — IIT Kharagpur</div>
+        <h1>Automate Your<span>Document Back-Office</span></h1>
+        <p>AI-powered OCR that reads, classifies and routes financial documents for Indian NBFCs — zero manual entry.</p>
+    </div>
+
     <div class="fdf-trust">Processes: KYC <span>•</span> Loan Applications <span>•</span> Bank Statements <span>•</span> Income Certificates</div>
+
     <div class="fdf-section">
-    <div class="fdf-section-title">How It Works</div>
-    <div class="fdf-steps"><div class="fdf-step"><div class="fdf-step-icon">📤</div><div class="fdf-step-num">Step 01</div><div class="fdf-step-title">Upload</div><div class="fdf-step-desc">PDF, JPG or PNG from any device</div></div><div class="fdf-step"><div class="fdf-step-icon">🔍</div><div class="fdf-step-num">Step 02</div><div class="fdf-step-title">OCR Scan</div><div class="fdf-step-desc">Tesseract extracts name, PAN, date, amounts</div></div><div class="fdf-step"><div class="fdf-step-icon">🎯</div><div class="fdf-step-num">Step 03</div><div class="fdf-step-title">Score and Route</div><div class="fdf-step-desc">Confidence scored 0-100%, auto-routed instantly</div></div><div class="fdf-step"><div class="fdf-step-icon">📋</div><div class="fdf-step-num">Step 04</div><div class="fdf-step-title">Audit and Export</div><div class="fdf-step-desc">Logged, exportable, PDF report ready</div></div></div>
-    <div class="fdf-section-title">By The Numbers</div>
-    <div class="fdf-stats"><div class="fdf-stat"><div class="fdf-stat-icon">⚡</div><div class="fdf-stat-val">Auto-Approved</div><div class="fdf-stat-label">&gt;90% Confidence</div></div><div class="fdf-stat"><div class="fdf-stat-icon">🏦</div><div class="fdf-stat-val">4 Doc Types</div><div class="fdf-stat-label">KYC · Loan · Bank · Income</div></div><div class="fdf-stat"><div class="fdf-stat-icon">🔒</div><div class="fdf-stat-val">Audit Trail</div><div class="fdf-stat-label">Every action logged</div></div><div class="fdf-stat"><div class="fdf-stat-icon">📄</div><div class="fdf-stat-val">PDF Export</div><div class="fdf-stat-label">Reports on demand</div></div></div>
-    <div class="fdf-section-title">What FinDocFlow Processes</div>
-    <div class="fdf-docs"><div class="fdf-doc"><div class="fdf-doc-icon">🪪</div><div class="fdf-doc-title">KYC Documents</div><div class="fdf-doc-desc">Aadhaar, PAN, Voter ID — extract name, DOB, ID numbers instantly</div></div><div class="fdf-doc"><div class="fdf-doc-icon">📝</div><div class="fdf-doc-title">Loan Applications</div><div class="fdf-doc-desc">Capture applicant name, loan amount, date, co-applicant details</div></div><div class="fdf-doc"><div class="fdf-doc-icon">🏦</div><div class="fdf-doc-title">Bank Statements</div><div class="fdf-doc-desc">Parse account number, transactions, income patterns</div></div><div class="fdf-doc"><div class="fdf-doc-icon">💰</div><div class="fdf-doc-title">Income Certificates</div><div class="fdf-doc-desc">Salary slips, ITR, Form 16 — verify income automatically</div></div></div>
+    <div class="fdf-section-title">How It <span>Works</span></div>
+    <div class="fdf-steps">
+        <div class="fdf-step"><div class="fdf-step-icon">📤</div><div class="fdf-step-num">Step 01</div><div class="fdf-step-title">Upload</div><div class="fdf-step-desc">PDF, JPG or PNG from any device</div></div>
+        <div class="fdf-step"><div class="fdf-step-icon">🔍</div><div class="fdf-step-num">Step 02</div><div class="fdf-step-title">OCR Scan</div><div class="fdf-step-desc">Tesseract extracts name, PAN, date, amounts</div></div>
+        <div class="fdf-step"><div class="fdf-step-icon">🎯</div><div class="fdf-step-num">Step 03</div><div class="fdf-step-title">Score and Route</div><div class="fdf-step-desc">Confidence scored 0-100%, auto-routed instantly</div></div>
+        <div class="fdf-step"><div class="fdf-step-icon">📋</div><div class="fdf-step-num">Step 04</div><div class="fdf-step-title">Audit and Export</div><div class="fdf-step-desc">Logged, exportable, PDF report ready</div></div>
+    </div>
+    <div class="fdf-section-title">By The <span>Numbers</span></div>
+    <div class="fdf-stats">
+        <div class="fdf-stat"><div class="fdf-stat-icon">⚡</div><div class="fdf-stat-val">Auto-Approved</div><div class="fdf-stat-label">&gt;90% Confidence</div></div>
+        <div class="fdf-stat"><div class="fdf-stat-icon">🏦</div><div class="fdf-stat-val">4 Doc Types</div><div class="fdf-stat-label">KYC · Loan · Bank · Income</div></div>
+        <div class="fdf-stat"><div class="fdf-stat-icon">🔒</div><div class="fdf-stat-val">Audit Trail</div><div class="fdf-stat-label">Every action logged</div></div>
+        <div class="fdf-stat"><div class="fdf-stat-icon">📄</div><div class="fdf-stat-val">PDF Export</div><div class="fdf-stat-label">Reports on demand</div></div>
+    </div>
+    <div class="fdf-section-title">What FinDocFlow <span>Processes</span></div>
+    <div class="fdf-docs">
+        <div class="fdf-doc"><div class="fdf-doc-icon">🪪</div><div class="fdf-doc-title">KYC Documents</div><div class="fdf-doc-desc">Aadhaar, PAN, Voter ID — extract name, DOB, ID numbers instantly</div></div>
+        <div class="fdf-doc"><div class="fdf-doc-icon">📝</div><div class="fdf-doc-title">Loan Applications</div><div class="fdf-doc-desc">Capture applicant name, loan amount, date, co-applicant details</div></div>
+        <div class="fdf-doc"><div class="fdf-doc-icon">🏦</div><div class="fdf-doc-title">Bank Statements</div><div class="fdf-doc-desc">Parse account number, transactions, income patterns</div></div>
+        <div class="fdf-doc"><div class="fdf-doc-icon">💰</div><div class="fdf-doc-title">Income Certificates</div><div class="fdf-doc-desc">Salary slips, ITR, Form 16 — verify income automatically</div></div>
+    </div>
     <div class="fdf-cta"><h3>Ready to digitise your NBFC back-office?</h3><p>Upload your first document and see FinDocFlow extract fields in seconds.</p></div>
     </div>
     """, unsafe_allow_html=True)
